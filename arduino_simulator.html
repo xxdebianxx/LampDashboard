@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>IoT Sensor Dashboard</title>
+    <style>
+        .dashboard-flex {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            gap: 30px;
+            flex-wrap: wrap; /* Good for mobile/small windows */
+        }
+
+        .hardware-side {
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .hardware-side img {
+            width: 400px;
+            height: auto;
+            filter: drop-shadow(0 0 10px rgba(0,255,0,0.3)); /* Makes the board 'glow' */
+        }
+
+        .sensors-side {
+            flex: 2;
+            min-width: 300px;
+        }
+
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; color: #eee; padding: 40px; }
+        .container { max-width: 600px; margin: auto; background: #2d2d2d; padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        .label-group { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold; }
+        
+        /* The Level Bar Styling */
+        .progress-bg { background: #444; border-radius: 20px; height: 25px; width: 100%; margin-bottom: 25px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0%; transition: width 0.5s ease-in-out, background-color 0.5s; }
+        
+        /* Color levels */
+        .temp-color { background: linear-gradient(90deg, #3498db, #e74c3c); }
+        .hum-color { background: #2ecc71; }
+
+        button { background: #3498db; border: none; color: white; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #2980b9; }
+        .status { margin-top: 15px; font-size: 0.8rem; color: #888; }
+
+        .led {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #444; /* Default off */
+            margin-right: 8px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        .led-active { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
+        .led-error { background: #e74c3c; box-shadow: 0 0 10px #e74c3c; }
+
+    </style>
+</head>
+<body>
+
+
+<div class="container">
+    <h1>ESP32 Telemetry Lab</h1>
+    
+    <div class="dashboard-flex">
+        <div class="hardware-side">
+            
+            <p style="font-size: 0.8rem; color: #00ff00;">Device: ESP-WROOM-32</p>
+            <img src="img/esp32.png" alt="My ESP32">
+        </div>
+
+        <div class="sensors-side">
+            <div class="label-group"><span>Temperature</span><span id="tempVal">0&deg;C</span></div>
+            <div class="progress-bg"><div id="tempFill" class="progress-fill temp-color"></div></div>
+
+            <div class="label-group"><span>Humidity</span><span id="humVal">0%</span></div>
+            <div class="progress-bg"><div id="humFill" class="progress-fill hum-color"></div></div>
+
+            <div class="label-group"><span>Pressure</span><span id="pressVal">0 hPa</span></div>
+            <div class="progress-bg"><div id="pressFill" class="progress-fill" style="background: #9b59b6;"></div></div>
+
+            <div class="label-group"><span>Altitude</span><span id="altVal">0 m</span></div>
+            <div class="progress-bg"><div id="altFill" class="progress-fill" style="background: #f1c40f;"></div></div>
+        </div>
+    </div>
+
+    <button onclick="toggleSimulator()" id="btn">Start Link</button>
+    <div class="status" id="statusDiv">
+        <span id="statusLed" class="led"></span>
+        <span id="statusMsg">Waiting for Connection...</span>
+    </div>
+</div>
+<script>
+    let running = false;
+    let timer;
+
+    function simulate() {
+        const data = {
+            temp: (Math.random() * 40 + 5).toFixed(1), // 5°C to 45°C
+            hum: (Math.random() * 100).toFixed(1),    // 0% to 100%
+            press: (950 + Math.random() * 100).toFixed(2), // 950 to 1050 hPa
+            alt: (Math.random() * 1000).toFixed(2)        // 0 to 1000 m
+        };
+    // --- Update Text Values ---
+        document.getElementById('tempVal').innerHTML = data.temp + "&deg;C";
+        document.getElementById('humVal').innerText = data.hum + "%";
+        document.getElementById('pressVal').innerText = data.press + " hPa";
+        document.getElementById('altVal').innerText = data.alt + " m";
+
+        // --- Update Level Bars ---
+        // Temperature (0-50 range)
+        document.getElementById('tempFill').style.width = (data.temp / 50 * 100) + "%";
+    
+        // Humidity (0-100 range)
+        document.getElementById('humFill').style.width = data.hum + "%";
+
+        // Pressure (We'll show the range between 900 and 1100 hPa)
+        const pressPercent = ((data.press - 900) / 200) * 100;
+        document.getElementById('pressFill').style.width = Math.max(0, pressPercent) + "%";
+
+        // Altitude (Assuming 2000m is the 'max' for this bar)
+        document.getElementById('altFill').style.width = (data.alt / 2000 * 100) + "%";
+        // --- Send to PHP ---
+        fetch('log_data.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).then(response => {
+            if (!response.ok) throw new Error('Server Error');
+            console.log("success");
+            return response.json();
+        }).then(result => {
+            // SUCCESS: Show the green light
+            statusDiv.style.color = "#00ff00"; // Green
+            document.getElementById('statusLed').className = "led led-active";
+            document.getElementById('statusMsg').innerText = "LINK ACTIVE: Data Synced (" + new Date().toLocaleTimeString() + ")";
+            document.getElementById('statusMsg').style.color = "#00ff00";
+            //updateUI(data); 
+        }).catch(error => {
+            document.getElementById('statusLed').className = "led led-error";
+            document.getElementById('statusMsg').innerText = "Connection Lost";
+            document.getElementById('statusMsg').style.color = "#e74c3c";
+        });
+    }
+
+    function toggleSimulator() {
+        running = !running;
+        document.getElementById('btn').innerText = running ? "Stop Monitoring" : "Start Monitoring";
+        if (running) { simulate(); timer = setInterval(simulate, 5000); } // 5 sec for demo speed
+        else { clearInterval(timer); }
+    }
+</script>
+
+</body>
+</html>
+
+
