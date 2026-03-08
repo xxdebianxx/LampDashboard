@@ -1,0 +1,27 @@
+/* =============================================
+   LIVE DASHBOARD — dashboard.css
+   ============================================= */
+
+main { padding: 20px; }
+
+.grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+.card {
+    background: #1e1e1e;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.full-width { grid-column: span 2; }
+
+h3 {
+    margin-top: 0;
+    color: #3498db;
+}
+
+canvas { max-height: 300px; }

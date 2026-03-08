@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>IoT Analytics — Historic Data</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared.css">
+    <link rel="stylesheet" href="dashboard_history.css">
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        <div class="logo-icon">IoT</div>
+        <h1>Sensor <span>Analytics</span></h1>
+    </div>
+    <nav>
+        <a href="dashboard.html">Live</a>
+        <a href="dashboard_history.html" class="active">Historic</a>
+    </nav>
+</header>
+
+<main>
+    <!-- Error banner -->
+    <div class="error-banner" id="errorBanner"></div>
+
+    <!-- Controls -->
+    <div class="controls">
+        <span class="controls-label">Range:</span>
+        <button class="range-btn" onclick="setRange(1)">24H</button>
+        <button class="range-btn active" onclick="setRange(7)">7D</button>
+        <button class="range-btn" onclick="setRange(30)">30D</button>
+        <button class="range-btn" onclick="setRange(90)">90D</button>
+        <div class="date-inputs">
+            <input type="date" id="dateFrom">
+            <span style="color:var(--muted);font-size:13px;">→</span>
+            <input type="date" id="dateTo">
+            <button class="btn-apply" onclick="applyCustomRange()">Apply</button>
+        </div>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">Avg Temperature</div>
+            <div class="stat-value" id="avgTemp">—</div>
+            <div class="stat-sub" id="avgTempRange">— / —</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Avg Humidity</div>
+            <div class="stat-value" id="avgHum">—</div>
+            <div class="stat-sub" id="avgHumRange">— / —</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Readings</div>
+            <div class="stat-value" id="totalReadings">—</div>
+            <div class="stat-sub" id="readingSpan">—</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">High Temp Alerts</div>
+            <div class="stat-value" id="highAlerts">—</div>
+            <div class="stat-sub" id="alertPct">—% of readings</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Avg Pressure</div>
+            <div class="stat-value" id="avgPressure">—</div>
+            <div class="stat-sub" id="avgPressureRange">— / — hPa</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Avg Altitude</div>
+            <div class="stat-value" id="avgAltitude">—</div>
+            <div class="stat-sub" id="avgAltitudeRange">— / — m</div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="chart-grid">
+        <div class="chart-card full">
+            <div class="chart-header">
+                <span class="chart-title">Pressure &amp; Altitude Over Time</span>
+                <span class="chart-badge" id="lineLabel2">7 days</span>
+            </div>
+            <canvas id="histLineChart2"></canvas>
+        </div>
+        <div class="chart-card full">
+            <div class="chart-header">
+                <span class="chart-title">Temperature &amp; Humidity Over Time</span>
+                <span class="chart-badge" id="lineLabel">7 days</span>
+            </div>
+            <canvas id="histLineChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header">
+                <span class="chart-title">Temperature Distribution</span>
+                <span class="chart-badge">Histogram</span>
+            </div>
+            <canvas id="histBarChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header">
+                <span class="chart-title">Humidity Breakdown</span>
+                <span class="chart-badge">All Time</span>
+            </div>
+            <canvas id="histPieChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Data table -->
+    <div class="table-card">
+        <div class="table-header">
+            <span class="table-title">Raw Readings</span>
+            <div style="display:flex;gap:10px;align-items:center;">
+                <input class="search-box" type="text" id="tableSearch" placeholder="Search..." oninput="filterTable()">
+                <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th onclick="sortTable('timestamp')"    id="th-timestamp"   ># Timestamp <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('temperature')"  id="th-temperature" >Temp (°C) <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('humidity')"     id="th-humidity"    >Humidity (%) <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('pressure')"     id="th-pressure"    >Pressure (hPa) <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('altitude')"     id="th-altitude"    >Altitude (m) <span class="sort-icon">↕</span></th>
+                    <th>Temp Status</th>
+                    <th>Humidity Status</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <div class="pagination">
+            <span class="page-info" id="pageInfo">Showing 0–0 of 0</span>
+            <div class="page-btns" id="pageBtns"></div>
+        </div>
+    </div>
+</main>
+
+<script src="dashboard_history.js"></script>
+</body>
+</html>

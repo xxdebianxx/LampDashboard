@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>IoT Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="shared.css">
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        <div class="logo-icon">IoT</div>
+        <h1><span id="statusLed"></span> Live Sensor Analytics</h1>
+    </div>
+    <nav>
+        <a href="dashboard.html" class="active">Live</a>
+        <a href="dashboard_history.html">Historic</a>
+    </nav>
+</header>
+
+<main>
+    <div class="grid">
+        <div class="card full-width">
+            <h3>Temperature &amp; Humidity History</h3>
+            <canvas id="lineChart"></canvas>
+        </div>
+        <div class="card">
+            <h3>Temperature Alerts</h3>
+            <canvas id="barChart"></canvas>
+        </div>
+        <div class="card">
+            <h3>Humidity Range</h3>
+            <canvas id="pieChart"></canvas>
+        </div>
+    </div>
+</main>
+
+<script src="dashboard.js"></script>
+</body>
+</html>
